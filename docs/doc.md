@@ -10,6 +10,8 @@ class=😄
 
 <div style={{ marginLeft: '200px' }}>😄</div>
 
+{add(6, 6)}
+
 > quote
 
 ::: react import

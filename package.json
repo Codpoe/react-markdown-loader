@@ -7,13 +7,21 @@
     "dev": "webpack-dev-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Codpoe/react-md-loader.git"
+  },
   "keywords": [
     "react",
-    "markdown-it",
+    "markdown",
     "loader"
   ],
   "author": "codpoe",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Codpoe/react-md-loader/issues"
+  },
+  "homepage": "https://github.com/Codpoe/react-md-loader#readme",
   "dependencies": {
     "highlight.js": "^9.12.0",
     "loader-utils": "^1.1.0",
