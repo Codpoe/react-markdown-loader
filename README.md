@@ -1,4 +1,4 @@
-# react-md-loader
+# react-markdown-loader
 
 Convert markdown file to react component using markdown-it
 
@@ -11,7 +11,7 @@ Convert markdown file to react component using markdown-it
 ## Installation
 
 ```sh
-npm i react-md-loader -D
+npm i @codpoe/react-markdown-loader -D
 ```
 
 ## Usage
@@ -24,14 +24,9 @@ module.exports = {
         rules: [
             {
                 test: /\.md$/,
-                use: [
-                    {
-                        loader: 'babel'
-                    },
-                    {
-                        loader: 'react-md-loader',
-                        options: {}
-                    }
+                loader: [
+                    'babel-loader',
+                    '@codpoe/react-markdown-loader'
                 ]
             }
         ]
@@ -93,7 +88,7 @@ render() {
 ### Write `{expression}`
 
 ```js
-{add(6, 6)}
+6 + 6 = {6 + 6}
 ```
 
 ## Options
