@@ -52,7 +52,7 @@ export default () => {
 
 import: 
 ```
-::: react import
+:::import
 ```js
 import { add } from './add.js';
     ```
@@ -61,7 +61,7 @@ import { add } from './add.js';
 
 export:
 ```
-::: react export
+:::export
 ```js
 export const meta = {
     author: 'xxx',
@@ -74,7 +74,7 @@ export const meta = {
 ### Write react component
 
 ```
-::: react demo
+:::demo
 ```js
 render() {
     return (
@@ -84,6 +84,20 @@ render() {
     ```
 :::
 ```
+
+> Note: The `demo` container will show the source code and its result on the page. If you just want to create a react component, please use `code` container instead. By the way, you can write any code you want in `code` container.
+
+### Any code
+
+```
+:::code
+```js
+const foo = () => { console.log('😘'); }
+    ```
+:::
+```
+
+Then you can call `foo`, usually in demo components.
 
 ### Write `{expression}`
 
