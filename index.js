@@ -51,10 +51,12 @@ const md = mdIt({
  * @param {string} exportStatements export 语句
  * @param {Array} demos 示例组件
  */
-const toMdComponent = (jsx, importStatements, exportStatements, demos) => {
+const toMdComponent = (jsx, code, importStatements, exportStatements, demos) => {
     return `
         import React from 'react';
         ${importStatements}
+
+        ${code}
 
         ${joinDemos(demos)}
 
@@ -78,9 +80,9 @@ const toMdComponent = (jsx, importStatements, exportStatements, demos) => {
  * @param {Array} demos 示例组件
  */
 const joinDemos = (demos) => {
-    return demos.map(([id, demo]) => (`
-        class Rmdl${id} extends React.Component {
-            ${demo}
+    return demos.map(([name, content]) => (`
+        class ${name} extends React.Component {
+            ${content}
         }
     `)).join('\n');
 };
@@ -102,6 +104,7 @@ module.exports = function (source) {
     const { className, plugins } = options;
     let importStatements = '';
     let exportStatements = '';
+    let code = '';
     const demos = [];
     let isDemo = false;
 
@@ -115,6 +118,7 @@ module.exports = function (source) {
             
             if (tokens[idx].nesting === 1) { // 开标签
                 const type = (m && m.length > 1) ? m[1] : '';
+                const name = `Rmdl${idx}`;
                 const content = tokens[idx + 1].content;
 
                 switch (type) {
@@ -125,7 +129,7 @@ module.exports = function (source) {
                         exportStatements += content;
                         break;
                     case TYPES.DEMO:
-                        demos.push([idx, content]);
+                        demos.push([name, content]);
                         isDemo = true;
                         break;
                 }
@@ -134,12 +138,10 @@ module.exports = function (source) {
                     return '{/* ';
                 }
 
-                const nodeName = `Rmdl${idx}`;
-
                 return `
                     <div className="${className}__demo">
                         <div className="${className}__demo-component">
-                            <${nodeName} />
+                            <${name} />
                         </div>
                         <div className="${className}__demo-code">
                 `;
@@ -150,9 +152,68 @@ module.exports = function (source) {
             isDemo = false;
             return '</div></div>';
         }
+    }).use(mdContainer, 'code', {
+        validate(params) {
+            return params.trim().match(/^code$/);
+        },
+        render(tokens, idx) {
+            if (tokens[idx].nesting === 1) {
+                const content = tokens[idx + 1].content;
+                code += content;
+
+                return '{/* ';
+            }
+            return ' */}';
+        }
+    }).use(mdContainer, 'import', { // 以 'import' 作为标记
+        validate(params) {
+            return params.trim().match(/^import$/);
+        },
+        render(tokens, idx) {
+            if (tokens[idx].nesting === 1) {
+                const content = tokens[idx + 1].content;
+                importStatements += content;
+
+                return '{/* ';
+            }
+            return ' */}';
+        }
+    }).use(mdContainer, 'export', { // 以 'export' 作为标记
+        validate(params) {
+            return params.trim().match(/^export$/);
+        },
+        render(tokens, idx) {
+            if (tokens[idx].nesting === 1) {
+                const content = tokens[idx + 1].content;
+                exportStatements += content;
+
+                return '{/* ';
+            }
+            return ' */}';
+        }
+    }).use(mdContainer, 'demo', { // 以 'demo' 作为标记
+        validate(params) {
+            return params.trim().match(/^demo$/);
+        },
+        render(tokens, idx) {
+            if (tokens[idx].nesting === 1) {
+                const name = `Rmdl${idx}`;
+                const content = tokens[idx + 1].content;
+                demos.push([name, content]);
+
+                return `
+                    <div className="${className}__demo">
+                        <div className="${className}__demo-component">
+                            <${name} />
+                        </div>
+                        <div className="${className}__demo-code">
+                `;
+            }
+            return '</div></div>';
+        }
     });
 
-    // 
+    // 使用额外的 markdown-it 插件
     plugins.forEach(plugin => {
         md.use(...plugin);
     });
@@ -160,5 +221,5 @@ module.exports = function (source) {
     // 转换为合法的 JSX 语法
     const jsx = toLegalJsx(md.render(source));
     
-    return toMdComponent(jsx, importStatements, exportStatements, demos);
+    return toMdComponent(jsx, code, importStatements, exportStatements, demos);
 };

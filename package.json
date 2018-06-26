@@ -1,6 +1,6 @@
 {
   "name": "@codpoe/react-markdown-loader",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "A webpack loader transforming markdown to react component",
   "main": "index.js",
   "scripts": {

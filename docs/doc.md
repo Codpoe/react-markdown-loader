@@ -14,13 +14,13 @@ class=😄
 
 > quote
 
-::: react import
+::: import
 ```js
 import { add } from './add.js';
 ```
 :::
 
-::: react demo
+::: demo
 ```jsx
 constructor(props) {
     super(props);
@@ -52,10 +52,14 @@ render() {
 ```
 :::
 
-::: react demo
+<Test />
+
+:::code
 ```jsx
-render() {
-    return <div onClick={() => { console.log('😄'); }}>{`1`}</div>;
+class Test extends React.Component {
+    render() {
+        return <div onClick={() => { console.log('😄'); }}>{`1`}</div>;
+    }
 }
 ```
 :::
