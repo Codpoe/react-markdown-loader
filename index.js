@@ -5,43 +5,43 @@ const hljs = require('highlight.js');
 
 // 自定义容器的类型
 const TYPES = {
-    IMPORT: 'import',
-    EXPORT: 'export',
-    DEMO: 'demo'
+  IMPORT: 'import',
+  EXPORT: 'export',
+  DEMO: 'demo'
 };
 
 const options = {
-    className: 'md',    // 组件类名
-    plugins: []         // markdown-it 插件
+  className: 'md',    // 组件类名
+  plugins: []         // markdown-it 插件
 };
 
 hljs.configure({
-    tabReplace: '    ', // 把 tab 字符转换成 4 个空格
-    useBR: true         // 把换行符转换成 <br>
+  tabReplace: '    ', // 把 tab 字符转换成 4 个空格
+  useBR: true         // 把换行符转换成 <br>
 });
 
 const md = mdIt({
-    html: true,
-    linkify: true,
-    typographer: false,
-    highlight(str, lang) {
-        let content;
+  html: true,
+  linkify: true,
+  typographer: false,
+  highlight(str, lang) {
+    let content;
 
-        if (lang && hljs.getLanguage(lang)) {
-            try {
-                content = hljs.highlight(lang, str).value;
-            } catch (err) {} // eslint-disable-line no-empty
-        }
-
-        if (!content) {
-            try {
-                content = hljs.highlightAuto(str).value;
-            } catch (err) {} // eslint-disable-line no-empty
-        }
-        
-        // 将 '{' 和 '}' 转换成字符串，防止其里面的内容被解析成表达式
-        return hljs.fixMarkup(content.replace(/[{}]/g, match => `{'${match}'}`));
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        content = hljs.highlight(lang, str).value;
+      } catch (err) { } // eslint-disable-line no-empty
     }
+
+    if (!content) {
+      try {
+        content = hljs.highlightAuto(str).value;
+      } catch (err) { } // eslint-disable-line no-empty
+    }
+
+    // 将 '{' 和 '}' 转换成字符串，防止其里面的内容被解析成表达式
+    return hljs.fixMarkup(content.replace(/[{}]/g, match => `{'${match}'}`));
+  }
 });
 
 /**
@@ -52,7 +52,7 @@ const md = mdIt({
  * @param {Array} demos 示例组件
  */
 const toMdComponent = (jsx, code, importStatements, exportStatements, demos) => {
-    return `
+  return `
         import React from 'react';
         ${importStatements}
 
@@ -80,7 +80,7 @@ const toMdComponent = (jsx, code, importStatements, exportStatements, demos) => 
  * @param {Array} demos 示例组件
  */
 const joinDemos = (demos) => {
-    return demos.map(([name, content]) => (`
+  return demos.map(([name, content]) => (`
         class ${name} extends React.Component {
             ${content}
         }
@@ -92,134 +92,134 @@ const joinDemos = (demos) => {
  * @param {string} html markdown-it 渲染得到的字符串
  */
 const toLegalJsx = (html) => {
-    return html.replace(/(<.*? )class=/g, (match, $1) => `${$1}className=`)
-        .replace(/<br>/g, '<br />')
-        .replace(/<hr>/g, '<hr />');
+  return html.replace(/(<.*? )class=/g, (match, $1) => `${$1}className=`)
+    .replace(/<br>/g, '<br />')
+    .replace(/<hr>/g, '<hr />');
 };
 
 module.exports = function (source) {
-    // 合并选项
-    Object.assign(options, loaderUtils.getOptions(this));
+  // 合并选项
+  Object.assign(options, loaderUtils.getOptions(this));
 
-    const { className, plugins } = options;
-    let importStatements = '';
-    let exportStatements = '';
-    let code = '';
-    const demos = [];
-    let isDemo = false;
+  const { className, plugins } = options;
+  let importStatements = '';
+  let exportStatements = '';
+  let code = '';
+  const demos = [];
+  let isDemo = false;
 
-    // 自定义 markdown 容器
-    md.use(mdContainer, 'react', { // 以 'react' 作为标记
-        validate(params) {
-            return params.trim().match(/^react\s*(.*)$/);
-        },
-        render(tokens, idx) {
-            const m = tokens[idx].info.trim().match(/^react\s*(.*)$/);
-            
-            if (tokens[idx].nesting === 1) { // 开标签
-                const type = (m && m.length > 1) ? m[1] : '';
-                const name = `Rmdl${idx}`;
-                const content = tokens[idx + 1].content;
+  // 自定义 markdown 容器
+  md.use(mdContainer, 'react', { // 以 'react' 作为标记
+    validate(params) {
+      return params.trim().match(/^react\s*(.*)$/);
+    },
+    render(tokens, idx) {
+      const m = tokens[idx].info.trim().match(/^react\s*(.*)$/);
 
-                switch (type) {
-                    case TYPES.IMPORT:
-                        importStatements += content;
-                        break;
-                    case TYPES.EXPORT:
-                        exportStatements += content;
-                        break;
-                    case TYPES.DEMO:
-                        demos.push([name, content]);
-                        isDemo = true;
-                        break;
-                }
+      if (tokens[idx].nesting === 1) { // 开标签
+        const type = (m && m.length > 1) ? m[1] : '';
+        const name = `Rmdl${idx}`;
+        const content = tokens[idx + 1].content;
 
-                if (!isDemo) { // 非 demo，则不显示代码
-                    return '{/* ';
-                }
+        switch (type) {
+          case TYPES.IMPORT:
+            importStatements += content;
+            break;
+          case TYPES.EXPORT:
+            exportStatements += content;
+            break;
+          case TYPES.DEMO:
+            demos.push([name, content]);
+            isDemo = true;
+            break;
+        }
 
-                return `
+        if (!isDemo) { // 非 demo，则不显示代码
+          return '{/* ';
+        }
+
+        return `
                     <div className="${className}__demo">
                         <div className="${className}__demo-component">
                             <${name} />
                         </div>
                         <div className="${className}__demo-code">
                 `;
-            }
-            if (!isDemo) {
-                return ' */}';
-            }
-            isDemo = false;
-            return '</div></div>';
-        }
-    }).use(mdContainer, 'code', {
-        validate(params) {
-            return params.trim().match(/^code$/);
-        },
-        render(tokens, idx) {
-            if (tokens[idx].nesting === 1) {
-                const content = tokens[idx + 1].content;
-                code += content;
+      }
+      if (!isDemo) {
+        return ' */}';
+      }
+      isDemo = false;
+      return '</div></div>';
+    }
+  }).use(mdContainer, 'code', {
+    validate(params) {
+      return params.trim().match(/^code$/);
+    },
+    render(tokens, idx) {
+      if (tokens[idx].nesting === 1) {
+        const content = tokens[idx + 1].content;
+        code += content;
 
-                return '{/* ';
-            }
-            return ' */}';
-        }
-    }).use(mdContainer, 'import', { // 以 'import' 作为标记
-        validate(params) {
-            return params.trim().match(/^import$/);
-        },
-        render(tokens, idx) {
-            if (tokens[idx].nesting === 1) {
-                const content = tokens[idx + 1].content;
-                importStatements += content;
+        return '{/* ';
+      }
+      return ' */}';
+    }
+  }).use(mdContainer, 'import', { // 以 'import' 作为标记
+    validate(params) {
+      return params.trim().match(/^import$/);
+    },
+    render(tokens, idx) {
+      if (tokens[idx].nesting === 1) {
+        const content = tokens[idx + 1].content;
+        importStatements += content;
 
-                return '{/* ';
-            }
-            return ' */}';
-        }
-    }).use(mdContainer, 'export', { // 以 'export' 作为标记
-        validate(params) {
-            return params.trim().match(/^export$/);
-        },
-        render(tokens, idx) {
-            if (tokens[idx].nesting === 1) {
-                const content = tokens[idx + 1].content;
-                exportStatements += content;
+        return '{/* ';
+      }
+      return ' */}';
+    }
+  }).use(mdContainer, 'export', { // 以 'export' 作为标记
+    validate(params) {
+      return params.trim().match(/^export$/);
+    },
+    render(tokens, idx) {
+      if (tokens[idx].nesting === 1) {
+        const content = tokens[idx + 1].content;
+        exportStatements += content;
 
-                return '{/* ';
-            }
-            return ' */}';
-        }
-    }).use(mdContainer, 'demo', { // 以 'demo' 作为标记
-        validate(params) {
-            return params.trim().match(/^demo$/);
-        },
-        render(tokens, idx) {
-            if (tokens[idx].nesting === 1) {
-                const name = `Rmdl${idx}`;
-                const content = tokens[idx + 1].content;
-                demos.push([name, content]);
+        return '{/* ';
+      }
+      return ' */}';
+    }
+  }).use(mdContainer, 'demo', { // 以 'demo' 作为标记
+    validate(params) {
+      return params.trim().match(/^demo$/);
+    },
+    render(tokens, idx) {
+      if (tokens[idx].nesting === 1) {
+        const name = `Rmdl${idx}`;
+        const content = tokens[idx + 1].content;
+        demos.push([name, content]);
 
-                return `
+        return `
                     <div className="${className}__demo">
                         <div className="${className}__demo-component">
                             <${name} />
                         </div>
                         <div className="${className}__demo-code">
                 `;
-            }
-            return '</div></div>';
-        }
-    });
+      }
+      return '</div></div>';
+    }
+  });
 
-    // 使用额外的 markdown-it 插件
-    plugins.forEach(plugin => {
-        md.use(...plugin);
-    });
+  // 使用额外的 markdown-it 插件
+  plugins.forEach(plugin => {
+    md.use(...plugin);
+  });
 
-    // 转换为合法的 JSX 语法
-    const jsx = toLegalJsx(md.render(source));
-    
-    return toMdComponent(jsx, code, importStatements, exportStatements, demos);
+  // 转换为合法的 JSX 语法
+  const jsx = toLegalJsx(md.render(source));
+
+  return toMdComponent(jsx, code, importStatements, exportStatements, demos);
 };

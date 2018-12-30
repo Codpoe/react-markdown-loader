@@ -4,9 +4,9 @@ import { render } from 'react-dom';
 import Doc from './doc.md';
 
 const App = () => (
-    <div>
-        <Doc />
-    </div>
+  <div>
+    <Doc />
+  </div>
 );
 
 render(<App />, document.getElementById('root'));
